@@ -1,0 +1,29 @@
+services:
+#  news-service:
+#    user: root
+#    container_name: news
+#    build:
+#      context: ..
+#      dockerfile: ./deploy/Dockerfile
+#    networks:
+#      - news-network
+#    depends_on:
+#      - postgres
+
+  postgres:
+    image: bitnami/postgresql:16
+    container_name: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRESQL_PASSWORD: ${POSTGRESQL_PASSWORD:?error}
+      POSTGRESQL_USERNAME: ${POSTGRESQL_USERNAME:?error}
+      POSTGRESQL_DATABASE: ${POSTGRESQL_DATABASE:?error}
+    volumes:
+      - ./pg-data:/bitnami/postgresql
+    networks:
+      - news-network
+
+networks:
+  news-network:
+    driver: bridge
