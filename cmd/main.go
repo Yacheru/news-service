@@ -15,16 +15,14 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	cfg := &config.ServerConfig
 
-	logger.InitLogger(cfg.APIDebug)
+	log := logger.InitLogger(cfg.APIDebug)
 
 	if err := config.InitConfig(); err != nil {
-		logger.Error(err.Error(), constants.LoggerCMD)
-
 		cancel()
 	}
 	logger.Info("configuration loaded", constants.LoggerCMD)
 
-	app, err := server.NewServer(ctx, cfg)
+	app, err := server.NewServer(ctx, cfg, log)
 	if err != nil {
 		logger.Error(err.Error(), constants.LoggerCMD)
 
@@ -32,12 +30,14 @@ func main() {
 	}
 	logger.Info("server configured", constants.LoggerCMD)
 
-	if err := app.Run(cfg); err != nil {
-		logger.Error(err.Error(), constants.LoggerCMD)
+	if app != nil {
+		if err := app.Run(cfg); err != nil {
+			logger.Error(err.Error(), constants.LoggerCMD)
 
-		cancel()
+			cancel()
+		}
+		logger.Info("server is running", constants.LoggerCMD)
 	}
-	logger.Info("server is running", constants.LoggerCMD)
 
 	<-ctx.Done()
 
@@ -45,7 +45,7 @@ func main() {
 		if err := app.Shutdown(ctx); err != nil {
 			logger.Error(err.Error(), constants.LoggerCMD)
 		}
-		
+
 		logger.Info("http-server shutdown", constants.LoggerCMD)
 	}
 

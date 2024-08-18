@@ -11,6 +11,7 @@ services:
 #      - postgres
 
   postgres:
+    user: root
     image: bitnami/postgresql:16
     container_name: postgres
     ports:

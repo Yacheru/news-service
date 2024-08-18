@@ -4,29 +4,32 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
+
 	"news-service/init/config"
 	"news-service/init/logger"
 	"news-service/internal/repository/postgres"
 	"news-service/internal/server/http/routes"
 	"news-service/pkg/constants"
-	"time"
 )
 
 type HTTPServer struct {
 	server *http.Server
 }
 
-func NewServer(ctx context.Context, cfg *config.Config) (*HTTPServer, error) {
-	db, err := postgres.NewPostgresConnection(ctx, cfg)
+func NewServer(ctx context.Context, cfg *config.Config, log *logrus.Logger) (*HTTPServer, error) {
+	db, err := postgres.NewPostgresConnection(ctx, cfg, log)
 	if err != nil {
 		return nil, err
 	}
 
 	engine := SetupGin(cfg)
 	api := engine.Group(cfg.APIEntry)
-	routes.NewComponentsAndRoutes(api, db).Routes()
+	routes.NewComponentsAndRoutes(api, db, cfg).Routes()
 
 	server := &http.Server{
 		Addr:           fmt.Sprintf(":%d", cfg.APIPort),

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/disgoorg/snowflake/v2"
 	"github.com/spf13/viper"
 
 	"news-service/init/logger"
@@ -15,6 +16,9 @@ type Config struct {
 	APIEntry string `mapstructure:"API_ENTRY"`
 
 	PostgresDSN string `mapstructure:"POSTGRESQL_DSN"`
+
+	WebhookID    snowflake.ID `mapstructure:"WEBHOOK_ID"`
+	WebhookToken string       `mapstructure:"WEBHOOK_TOKEN"`
 }
 
 func InitConfig() error {
@@ -35,7 +39,8 @@ func InitConfig() error {
 		return err
 	}
 
-	if ServerConfig.APIPort == 0 {
+	if ServerConfig.APIPort == 0 || ServerConfig.APIEntry == "" ||
+		ServerConfig.PostgresDSN == "" || ServerConfig.WebhookID == 0 || ServerConfig.WebhookToken == "" {
 		logger.Error(constants.EmptyRequiredVar.Error(), constants.LoggerConfig)
 
 		return constants.EmptyRequiredVar
