@@ -14,19 +14,24 @@ import (
 )
 
 func NewPostgresConnection(ctx context.Context, cfg *config.Config, log *logrus.Logger) (*sqlx.DB, error) {
+	logger.Debug("connecting to postgres...", constants.LoggerElasticsearch)
+
 	db, err := sqlx.ConnectContext(ctx, "pgx", cfg.PostgresDSN)
 	if err != nil {
+		logger.Error(err.Error(), constants.LoggerPostgres)
+
 		return nil, err
 	}
 
-	logger.Info("successfully connect to database. Migrating...", constants.LoggerPostgres)
+	logger.Debug("successfully connect to database. Migrating...", constants.LoggerPostgres)
 
 	if err := GooseMigrate(db, log); err != nil {
+		logger.Error(err.Error(), constants.LoggerPostgres)
 
 		return nil, err
 	}
 
-	logger.Info("successfully applying migrations", constants.LoggerPostgres)
+	logger.Info("postgres is working", constants.LoggerPostgres)
 
 	return db, nil
 }

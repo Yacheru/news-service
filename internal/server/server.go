@@ -4,15 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
+	"go.elastic.co/apm/module/apmgin/v2"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
-
+	"github.com/sirupsen/logrus"
 	"news-service/init/config"
 	"news-service/init/logger"
+	"news-service/internal/repository/elastic"
 	"news-service/internal/repository/postgres"
+	"news-service/internal/repository/redis"
 	"news-service/internal/server/http/routes"
 	"news-service/pkg/constants"
 )
@@ -27,9 +29,19 @@ func NewServer(ctx context.Context, cfg *config.Config, log *logrus.Logger) (*HT
 		return nil, err
 	}
 
+	es, err := elastic.NewElasticClient(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	r, err := redis.NewRedisClient(ctx, cfg)
+	if err != nil {
+		return nil, err
+	}
+
 	engine := SetupGin(cfg)
 	api := engine.Group(cfg.APIEntry)
-	routes.NewComponentsAndRoutes(api, db, cfg).Routes()
+	routes.NewComponentsAndRoutes(api, db, es, r, cfg).Routes()
 
 	server := &http.Server{
 		Addr:           fmt.Sprintf(":%d", cfg.APIPort),
@@ -71,6 +83,7 @@ func SetupGin(cfg *config.Config) *gin.Engine {
 
 	engine.Use(gin.Recovery())
 	engine.Use(gin.LoggerWithFormatter(logger.HTTPLogger))
+	engine.Use(apmgin.Middleware(engine))
 
 	return engine
 }

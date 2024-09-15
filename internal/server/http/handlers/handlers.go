@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"news-service/internal/service"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -39,12 +41,55 @@ func (h *Handlers) AddNew(ctx *gin.Context) {
 	NewSuccessResponse(ctx, http.StatusOK, "news added successfully", id)
 }
 
-func (h *Handlers) SearchNews(ctx *gin.Context) {
+func (h *Handlers) GetAllNews(ctx *gin.Context) {
 	// TODO:
 	/*
+		- Search by discord-id
 		- Search by title
 		- Search by description
 		- Search by author
 		- Search by footer
 	*/
+	entityParams, exists := ctx.Get("params")
+	if !exists {
+		NewErrorResponse(ctx, http.StatusInternalServerError, constants.InternalServerError)
+		return
+	}
+
+	params := entityParams.(*entities.Params)
+
+	news, err := h.service.GetAllNews(ctx, params)
+	if err != nil {
+		NewErrorResponse(ctx, http.StatusInternalServerError, constants.InternalServerError)
+		return
+	}
+
+	if len(news) == 0 {
+		NewErrorResponse(ctx, http.StatusNotFound, constants.DataNotFound)
+		return
+	}
+
+	NewSuccessResponse(ctx, http.StatusOK, "news search successfully", news)
+}
+
+func (h *Handlers) GetNewsById(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		logger.Error(err.Error(), constants.LoggerHandlers)
+		NewErrorResponse(ctx, http.StatusBadRequest, constants.IdParamInvalid)
+		return
+	}
+
+	news, err := h.service.GetNewsById(ctx, id)
+	if err != nil {
+		if errors.Is(err, constants.NoNewsFoundError) {
+			NewErrorResponse(ctx, http.StatusNotFound, constants.NoNewsFoundError.Error())
+			return
+		}
+
+		NewErrorResponse(ctx, http.StatusInternalServerError, constants.InternalServerError)
+		return
+	}
+
+	NewSuccessResponse(ctx, http.StatusOK, "news search successfully", news)
 }

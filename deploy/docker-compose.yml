@@ -8,7 +8,36 @@ services:
 #    networks:
 #      - news-network
 #    depends_on:
-#      - postgres
+#      redis:
+#        condition: service_started
+#      postgres:
+#        condition: service_healthy
+#      elasticsearch:
+#        condition: service_started
+
+  redis:
+    user: root
+    image: bitnami/redis:7.4.0
+    container_name: redis
+    ports:
+      - 6379:6379
+    environment:
+      REDIS_DATABASE: ${REDIS_DATABASE:?error}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?error}
+    volumes:
+      - /redis-data:/bitnami/redis/data
+    networks:
+      - news-network
+
+  redisinsight:
+    user: root
+    image: redis/redisinsight:2.56
+    ports:
+      - 5540:5540
+    volumes:
+      - /redisinsight-data:/data
+    networks:
+      - news-network
 
   postgres:
     user: root
@@ -22,6 +51,60 @@ services:
       POSTGRESQL_DATABASE: ${POSTGRESQL_DATABASE:?error}
     volumes:
       - ./pg-data:/bitnami/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRESQL_USERNAME} -d ${POSTGRESQL_DATABASE}'" ]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+    networks:
+      - news-network
+
+  elasticsearch:
+    user: root
+    image: bitnami/elasticsearch:8.15.0
+    container_name: elasticsearch
+    ports:
+      - 9200:9200
+    environment:
+      ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD:?error}
+    volumes:
+      - ./elastic-data:/bitnami/elasticsearch
+    networks:
+      - news-network
+
+  logstash:
+    user: root
+    image: bitnami/logstash:8.7.0
+    container_name: logstash
+    ports:
+      - 9600:9600
+    environment:
+      LOGSTASH_ELASTICSEARCH_HOST: ${ELASTICSEARCH_CLIENT:?error}
+      LOGSTASH_PIPELINE_CONF_FILENAME: sync.conf
+    depends_on:
+      - elasticsearch
+      - postgres
+    volumes:
+      - ./logstash/data:/usr/share/logstash/data
+      - ./logstash/bin/postgresql-42.6.0.jar:/opt/bitnami/logstash/logstash-core/lib/jars/postgresql-42.6.0.jar
+      - ./logstash/config:/bitnami/logstash/pipeline
+    networks:
+      - news-network
+
+  kibana:
+    user: root
+    image: bitnami/kibana:8.15.0
+    container_name: kibana
+    ports:
+      - 5601:5601
+    depends_on:
+      - logstash
+      - elasticsearch
+    environment:
+      KIBANA_ELASTICSEARCH_URL: http://elasticsearch:9200
+      KIBANA_PASSWORD: ${KIBANA_PASSWORD:?error}
+    volumes:
+      - ./kibana-data:/bitnami/kibana
     networks:
       - news-network
 

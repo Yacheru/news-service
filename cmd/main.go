@@ -15,17 +15,14 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	cfg := &config.ServerConfig
 
-	log := logger.InitLogger(cfg.APIDebug)
-
 	if err := config.InitConfig(); err != nil {
 		cancel()
 	}
-	logger.Info("configuration loaded", constants.LoggerCMD)
+
+	log := logger.InitLogger(cfg.APIDebug)
 
 	app, err := server.NewServer(ctx, cfg, log)
 	if err != nil {
-		logger.Error(err.Error(), constants.LoggerCMD)
-
 		cancel()
 	}
 	logger.Info("server configured", constants.LoggerCMD)

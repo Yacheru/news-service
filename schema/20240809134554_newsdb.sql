@@ -27,17 +27,19 @@ CREATE TABLE IF NOT EXISTS fields (
 );
 
 CREATE TABLE IF NOT EXISTS news (
-   id serial primary key,
-   title text default null,
-   description text default null,
-   url varchar default null,
-   timestamp timestamp default current_timestamp,
-   color int default null,
-   footer int default null references footers(id) on delete cascade,
-   image int default null references resources(id) on delete cascade,
-   thumbnail int default null references resources(id) on delete cascade,
-   video int default null references resources(id) on delete cascade,
-   author int default null references authors(id) on delete cascade
+    id serial primary key,
+    discord_id bigint not null,
+    title text default null,
+    description text default null,
+    url varchar default null,
+    color int default null,
+    footer int default null references footers(id) on delete cascade,
+    image int default null references resources(id) on delete cascade,
+    thumbnail int default null references resources(id) on delete cascade,
+    video int default null references resources(id) on delete cascade,
+    author int default null references authors(id) on delete cascade,
+    created_at timestamptz default current_timestamp,
+    updated_at timestamptz
 );
 
 CREATE TABLE IF NOT EXISTS news_fields (

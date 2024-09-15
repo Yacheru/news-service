@@ -3,36 +3,42 @@ package entities
 import "time"
 
 type Embed struct {
-	Title       string         `json:"title,omitempty"`
-	Description string         `json:"description,omitempty"`
-	URL         string         `json:"url,omitempty"`
-	Timestamp   *time.Time     `json:"timestamp,omitempty"` // ISO 8601 | RFC 3339
-	Color       int            `json:"color,omitempty"`
-	Footer      *EmbedFooter   `json:"footer,omitempty"`
-	Image       *EmbedResource `json:"image,omitempty"`
-	Thumbnail   *EmbedResource `json:"thumbnail,omitempty"`
-	Video       *EmbedResource `json:"video,omitempty"`
-	Author      *EmbedAuthor   `json:"author,omitempty"`
-	Fields      []EmbedField   `json:"fields,omitempty"`
+	DiscordId   int            `json:"discord_id" db:"discord_id"`
+	Title       string         `json:"title,omitempty" db:"title"`
+	Description string         `json:"description,omitempty" db:"description"`
+	URL         string         `json:"url,omitempty" db:"url"`
+	Timestamp   *time.Time     `json:"timestamp,omitempty" db:"created_at"` // ISO 8601 | RFC 3339
+	Color       int            `json:"color,omitempty" db:"color"`
+	Footer      *EmbedFooter   `json:"footer,omitempty" db:"footer"`
+	Image       *EmbedResource `json:"image,omitempty" db:"image"`
+	Thumbnail   *EmbedResource `json:"thumbnail,omitempty" db:"thumbnail"`
+	Video       *EmbedResource `json:"video,omitempty" db:"video"`
+	Author      *EmbedAuthor   `json:"author,omitempty" db:"author"`
+	Fields      []EmbedField   `json:"fields,omitempty" db:"fields"`
+	UpdatedAt   *time.Time     `json:"updated_at,omitempty" db:"updated_at"`
 }
 
 type EmbedResource struct {
-	URL string `json:"url,omitempty"`
+	Id  int    `json:"id,omitempty" db:"id"`
+	URL string `json:"url,omitempty" db:"url"`
 }
 
 type EmbedAuthor struct {
-	Name    string `json:"name,omitempty"`
-	URL     string `json:"url,omitempty"`
-	IconURL string `json:"icon_url,omitempty"`
+	Id      int    `json:"id,omitempty" db:"id"`
+	Name    string `json:"name,omitempty" db:"name"`
+	URL     string `json:"url,omitempty" db:"url"`
+	IconURL string `json:"icon_url,omitempty" db:"icon_url"`
 }
 
 type EmbedFooter struct {
-	Text    string `json:"text"`
-	IconURL string `json:"icon_url,omitempty"`
+	Id      int    `json:"id,omitempty" db:"id"`
+	Text    string `json:"text,omitempty" db:"text"`
+	IconURL string `json:"icon_url,omitempty" db:"icon_url"`
 }
 
 type EmbedField struct {
-	Name   string `json:"name"`
-	Value  string `json:"value"`
-	Inline *bool  `json:"inline,omitempty"`
+	Id     int    `json:"id,omitempty" db:"id"`
+	Name   string `json:"name" db:"name"`
+	Value  string `json:"value" db:"value"`
+	Inline *bool  `json:"inline,omitempty" db:"inline"`
 }

@@ -11,7 +11,7 @@ import (
 )
 
 type Sender interface {
-	SendEmbed(embed *entities.Embed) error
+	SendEmbed(embed *entities.Embed) (int, error)
 }
 
 type WebhookClient struct {
@@ -23,7 +23,7 @@ func NewWebhookClient(cfg *config.Config) *WebhookClient {
 	return &WebhookClient{client: client}
 }
 
-func (w *WebhookClient) SendEmbed(embed *entities.Embed) error {
+func (w *WebhookClient) SendEmbed(embed *entities.Embed) (int, error) {
 	embedBuilder := discord.NewEmbedBuilder()
 
 	if embed.Title != "" {
@@ -73,14 +73,12 @@ func (w *WebhookClient) SendEmbed(embed *entities.Embed) error {
 
 	embedBuilder.SetColor(embed.Color)
 
-	message, err := w.client.CreateEmbeds([]discord.Embed{
-		embedBuilder.Build(),
-	})
+	message, err := w.client.CreateEmbeds([]discord.Embed{embedBuilder.Build()})
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	logger.DebugF("message sent successfully (ID: %d)", constants.LoggerDiscord, message.ID)
 
-	return nil
+	return int(message.ID), nil
 }

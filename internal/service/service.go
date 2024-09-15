@@ -11,6 +11,8 @@ import (
 
 type News interface {
 	AddNew(ctx *gin.Context, embed *entities.Embed) (*int, error)
+	GetAllNews(ctx *gin.Context, params *entities.Params) ([]*entities.Embed, error)
+	GetNewsById(ctx *gin.Context, discordId int) (*entities.Embed, error)
 }
 
 type Service struct {
@@ -19,6 +21,6 @@ type Service struct {
 
 func NewService(repo *repository.Repository, ds *discord.WebhookClient) *Service {
 	return &Service{
-		News: news.NewNewsService(repo.News, ds),
+		News: news.NewNewsService(repo.NewsPostgres, repo.NewsRedis, ds),
 	}
 }

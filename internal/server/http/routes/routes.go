@@ -3,10 +3,14 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
+	"github.com/redis/go-redis/v9"
+	"news-service/internal/repository/elastic"
+
 	"news-service/init/config"
 	"news-service/internal/discord"
 	"news-service/internal/repository"
 	"news-service/internal/server/http/handlers"
+	"news-service/internal/server/http/middlewares"
 	"news-service/internal/service"
 )
 
@@ -15,8 +19,8 @@ type Router struct {
 	handler *handlers.Handlers
 }
 
-func NewComponentsAndRoutes(router *gin.RouterGroup, db *sqlx.DB, cfg *config.Config) *Router {
-	repo := repository.NewRepository(db)
+func NewComponentsAndRoutes(router *gin.RouterGroup, db *sqlx.DB, es *elastic.Client, redis *redis.Client, cfg *config.Config) *Router {
+	repo := repository.NewRepository(db, es, redis, cfg)
 	webhook := discord.NewWebhookClient(cfg)
 	services := service.NewService(repo, webhook)
 	handler := handlers.NewHandlers(services)
@@ -27,6 +31,7 @@ func NewComponentsAndRoutes(router *gin.RouterGroup, db *sqlx.DB, cfg *config.Co
 func (r *Router) Routes() {
 	{
 		r.router.POST("/add", r.handler.AddNew)
-		r.router.GET("/", r.handler.SearchNews)
+		r.router.GET("/", middlewares.ParseQuery(), r.handler.GetAllNews)
+		r.router.GET("/:id", middlewares.ParseParam(), r.handler.GetNewsById)
 	}
 }
